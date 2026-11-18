@@ -30,7 +30,8 @@ def load_transform():
     # first row (=column names) uses "", all other rows use ''
     # use '' as quotechar as it is easier to change column names
     df = pd.read_csv(
-        "https://www.openml.org/data/get_csv/20649148/freMTPL2freq.arff", quotechar="'"
+        "https://www.openml.org/data/get_csv/20649148/freMTPL2freq.arff",
+        quotechar="'",
     )
 
     # rename column names '"name"' => 'name'
