@@ -27,15 +27,26 @@ def create_sample_split(df, id_column, training_frac=0.8):
         raise ValueError("training_frac must be between 0 and 1")
 
     # Convert IDs into integers
-    if pd.api.types.is_integer_dtype(df[id_column]):
-        ids = df[id_column]
+    columns = [id_column] if isinstance(id_column, str) else list(id_column)
+    if not columns:
+        raise ValueError("Provide at least one ID column")
+
+    if len(columns) == 1:
+        key = df[columns[0]]
     else:
-        ids = df[id_column].apply(
-            lambda x: int(
-                hashlib.sha256(str(x).encode("utf-8")).hexdigest(), 16
-            )
+        rows = df[columns].itertuples(index=False, name=None)
+        key = pd.Series(
+            (json.dumps(row, default=str) for row in rows),
+            index=df.index,
         )
 
+    if pd.api.types.is_integer_dtype(key):
+        ids = key
+    else:
+        ids = key.map(
+            lambda x: int(hashlib.sha256(str(x).encode("utf-8")).hexdigest(), 16)
+        )
+    
     # Assign observations to training or test samples
     df["sample"] = "test"
     df.loc[(ids % 100) < training_frac * 100, "sample"] = "train"
