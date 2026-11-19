@@ -25,7 +25,7 @@ y = df["PurePremium"]
 # Why do you think, we divide by exposure here to arrive at our outcome variable?
 # We divide ClaimAmountCut by Exposure to obtain PurePremium, which represents the expected claim amount per unit of exposure. Exposure is also used as a sample weight when fitting the model, so observations with greater exposure contribute more to the estimation.
 
-
+#%%
 # Create a reproducible training and testing sample split
 df = create_sample_split(df, id_column="IDpol", training_frac=0.8)
 
@@ -34,10 +34,14 @@ test = np.where(df["sample"] == "test")[0]
 df_train = df.iloc[train].copy()
 df_test = df.iloc[test].copy()
 
+#%%
+
 categoricals = ["VehBrand", "VehGas", "Region", "Area", "DrivAge", "VehAge", "VehPower"]
 
 predictors = categoricals + ["BonusMalus", "Density"]
 glm_categorizer = Categorizer(columns=categoricals)
+
+#%%
 
 X_train_t = glm_categorizer.fit_transform(df[predictors].iloc[train])
 X_test_t = glm_categorizer.transform(df[predictors].iloc[test])
@@ -48,6 +52,7 @@ TweedieDist = TweedieDistribution(1.5)
 t_glm1 = GeneralizedLinearRegressor(family=TweedieDist, l1_ratio=1, fit_intercept=True)
 t_glm1.fit(X_train_t, y_train_t, sample_weight=w_train_t)
 
+#%%
 
 pd.DataFrame(
     {"coefficient": np.concatenate(([t_glm1.intercept_], t_glm1.coef_))},
@@ -56,6 +61,8 @@ pd.DataFrame(
 
 df_test["pp_t_glm1"] = t_glm1.predict(X_test_t)
 df_train["pp_t_glm1"] = t_glm1.predict(X_train_t)
+
+#%%
 
 print(
     "training loss t_glm1:  {}".format(
